@@ -11,32 +11,32 @@ class PasswordGenerator:
     def __init__(
         self,
         length=16,
-        use_lower=True,
-        use_upper=True,
-        use_digits=True,
-        use_symbols=True,
+       minuscules=True,
+        majuscules=True,
+        chiffres=True,
+        symboles=True,
         validate=True,
     ):
         self.length = length
-        self.use_lower = use_lower
-        self.use_upper = use_upper
-        self.use_digits = use_digits
-        self.use_symbols = use_symbols
+        self.minuscules= minuscules
+        self.majuscules = majuscules
+        self.chiffres = chiffres
+        self.symboles = symboles
         self.validate = validate
 
     def generer(self):
         groupes = []
 
-        if self.use_lower:
+        if self.minuscules:
             groupes.append(string.ascii_lowercase)
 
-        if self.use_upper:
+        if self.majuscules:
             groupes.append(string.ascii_uppercase)
 
-        if self.use_digits:
+        if self.chiffres:
             groupes.append(string.digits)
 
-        if self.use_symbols:
+        if self.symboles:
             groupes.append(string.punctuation)
 
         if not groupes:

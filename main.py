@@ -48,14 +48,9 @@ def main():
 
     arguments = parse_arguments()
 
-    generator = PasswordGenerator(
-        length=arguments.length,
-        use_lower=not arguments.no_lower,
-        use_upper=not arguments.no_upper,
-        use_digits=not arguments.no_digits,
-        use_symbols=not arguments.no_symbols,
-        validate=arguments.validate,
-    )
+    generator = PasswordGenerator(length=arguments.length, minuscules=not arguments.no_lower,
+                                  majuscules=not arguments.no_upper, chiffres=not arguments.no_digits,
+                                  symboles=not arguments.no_symbols, validate=arguments.validate)
 
     try:
         password = generator.generer()
