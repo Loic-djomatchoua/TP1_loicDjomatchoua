@@ -1,6 +1,6 @@
-# Nom : [Votre nom]
-# Numéro d'étudiant : [Votre numéro]
-# GitHub : [votre-username]
+# Nom :Loic Djomacthoua
+# Numéro d'étudiant : 2392019
+# GitHub : TP-LoicDjomacthoua
 
 import json
 import os

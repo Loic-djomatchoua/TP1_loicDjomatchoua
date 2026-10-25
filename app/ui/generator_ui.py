@@ -1,146 +1,93 @@
-
-from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QSlider, QCheckBox, QMessageBox, QApplication
-)
-from PySide6.QtCore import Qt
-
-from app.core.generator import PasswordGenerator
+# Nom: Loic Geoffrey Djomacthoua
+# Numero d'etudiant: 2392019
+# Github: TP-LoicDjomatchoua
 
 
-class MainWindow(QMainWindow):
-    def __init__(self, parent=None):
+class GeneratorFenetre(QDialog):
+    def __init__(self,parent):
         super().__init__(parent)
-        self.setWindowTitle("Générateur de mot de passe")
-        self.visible = True
+        self.setWindowTitle("Genereateur de mot de passe")
+        self.resize(600,450)
         self.mot_recent = ""
-        self.init_ui()
 
-    def init_ui(self):
-       layout = QVBoxLayout()
-       label = QLabel("Longueur du mot de passe")
-       layout.addWidget(label)
+        layout = QVBoxLayout()
+        titre = QLabel("Generateur de mots de passe")
+        titre.setObjectName("titre")
+        titre.setWordWrap(True)
+        layout.addWidget(QLabel("Longueur du mot de passe"))
 
-       longueur_layout = QHBoxLayout()
-       btn_minus = QPushButton("-")
-       btn_minus.setFixedWidth(40)
-       btn_minus.clicked.connect(lambda: self.ajuster_longueur(-1))
-       longueur_layout.addWidget(btn_minus)
+        ligne =QHBoxLayout()
+        minus = QPushButton("-")
+        plus = QPushButton("+")
+        self.slider = QSlider(Qt.Orientation.Horizontal)
+        self.slider.setRange(8,20)
+        self.slider.setValue(16)
+        minus.clicked.connect(lambda: self.slider.setValue(self.slider.value() - 1))
+        plus.clicked.connect(lambda: self.slider.setValue(self.slider.value() + 1))
+        ligne.addWidget(minus)
+        ligne.addWidget(self.slider,1)
+        ligne.addWidget(plus)
+        layout.addLayout(ligne)
 
-       self.slider = QSlider(Qt.Orientation.Horizontal)
-       self.slider.setRange(4,32)
-       self.slider.setValue(16)
-       self.slider.valueChanged.connect(
-           lambda v: self.label_label_longueur.setText(str(v))
-       )
-       longueur_layout.addWidget(self.slider)
+        self.longueur_label = QLabel("16 caractères  - minimun : 8")
+        self.slider.valueChanged.connect(lambda n: self.longueur_label.setText(
+            f"{n} caractères -minimum : 8"))
+        layout.addWidget(self.longueur_label)
 
-       btn_plus = QPushButton("+")
-       btn_plus.setFixedWidth(40)
-       btn_plus.clicked.connect(lambda: self.ajuster_longueur(1))
-       longueur_layout.addWidget(btn_plus)
+        layout.addWidget(QLabel("Types de caractères"))
+        self.verifies = []
+        for texte in ("Lettres minuscules", "Lettres majuscules", "Chiffres", "Caractères spéciaux"):
+            verifie = QCheckBox(texte)
+            verifie.setChecked(True)
+            layout.addWidget(verifie)
+            self.verifies.append(verifie)
 
-       layout.addLayout(longueur_layout)
+        self.validation = QCheckBox("Exiger au moins un caractère de chaque type")
+        self.validation.setChecked(True)
+        layout.addWidget(self.validation)
+        layout.addStretch()
 
-       layout_secondaire =QHBoxLayout()
-       layout_secondaire.addWidget(QLabel("9 caractères minimum"))
-       self.label_longueur = QLabel("16")
-       self.label_longueur.setStyleSheet("font-weight: bold;")
-       layout_secondaire.addWidget(self.label_longueur)
+        ligne = QHBoxLayout()
+        ligne.addWidget(QLabel("Mot de passe"))
+        ligne.addStretch()
 
+        self.afficher = QPushButton("Afficher")
+        self.afficher.setCheckable(True)
+        self.afficher.toggled.connect(self.masquer_mot_passe)
+        ligne.addWidget(self.afficher)
+        layout.addLayout(ligne)
 
-       titre =QLabel("Types de caractères")
+        self.mot_label = QLabel("Generer un mot de passe")
+        self.mot_label.setObjectName("mot_passe")
+        self.mot_label.setMinimumHeight(56)
+        self.mot_label.setWordWrap(True)
+        self.mot_label.setTextFormat(Qt.TextFormat.PlainText)
+        self.mot_label.setInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse
+                                           | Qt.TextInteractionFlag.TextSelectableByKeyboard)
+        layout.addWidget(self.mot_label)
 
-       self.verifie_miniscules =QCheckBox("Lettres minuscules (a-z)")
-       self.verifie_miniscules.setChecked(True)
-       self.verifie_majuscules = QCheckBox("Lettres majuscules (A-Z)")
-       self.verifie_majuscules.setChecked(True)
-       self.verifie_chiffres = QCheckBox("Chiffres (0-9)")
-       self.verifie_chiffres.setChecked(True)
-       self.verifie_symboles = QCheckBox("Symboles (!/$%)")
-       self.verifie_symboles.setChecked(True)
+        ligne = QHBoxLayout()
+        note = QLabel("Le mot de passe est masqué par defaut.")
+        note.setWordWrap(True)
+        ligne.addWidget(note,1)
+        self.copie_button = QPushButton("Copier")
+        self.copie_button.setEnabled(False)
+        self.copie_button.clicked.connect(self.copie_mot)
+        ligne.addWidget(self.copie_button)
+        layout.addLayout(ligne)
 
-       layout.addWidget(titre)
-       layout.addWidget(self.verifie_miniscules)
-       layout.addWidget(self.verifie_majuscules)
-       layout.addWidget(self.verifie_chiffres)
-       layout.addWidget(self.verifie_symboles)
+        generer = QPushButton("Generer un mot de passe")
+        generer.setObjectName("Marron")
+        generer.clicked.connect(self.generer)
+        layout.addWidget(generer)
 
-       self.label_mot = QLabel("")
-       self.label_mot.setWordWrap(True)
-       self.label_mot.setTextInteractionFlags(
-           Qt.TextInteractionFlag.TextSelectableByMouse
-       )
-       self.label_mot.setStyleSheet(
-           "font-family: Consolas; font-size: 14px; "
-           "background: #f0f0f0; padding: 10px; border: 1px solid #ccc;"
-       )
-
-       layout.addWidget(self.label_mot)
-
-
-       btn_masquer = QPushButton("Afficher / Masquer")
-       btn_masquer.clicked.connect(self.toggle_visibility)
-       layout.addWidget(btn_masquer)
-
-
-       btn_generate = QPushButton("Générer")
-       btn_generate.setStyleSheet("background: #28a745; color: white; padding: 8px;")
-       btn_generate.clicked.connect(self.generer)
-       layout.addWidget(btn_generate)
-
-       btn_copie = QPushButton("Copier")
-       btn_copie.setStyleSheet("background: #6c757d; color: white; padding: 8px;")
-       btn_copie.clicked.connect(self.copie_mot)
-       layout.addWidget(btn_copie)
-
-       # Assigner le layout à la fenêtre via un widget central
-       central_widget = QWidget()
-       central_widget.setLayout(layout)
-       self.setCentralWidget(central_widget)
-
-       self.generer()
-
-    def ajuster_longueur(self, delta):
-        nouvel_valeur = self.slider.value() + delta
-        if 4 <= new_val <= 32:
-            self.slider.setValue(nouvel_valeur)
-
-    def generer(self):
-        try:
-            gen = PasswordGenerator(
-                length=self.slider.value(),
-                use_lower=self.verifie_minuscule.isChecked(),
-                use_upper=self.verifie_majuscule.isChecked(),
-                use_digits=self.verifie_chiffres.isChecked(),
-                use_symbols=self.verifie_symboles.isChecked(),
-                validate=False,
-            )
-            self.current_password = gen.generer()
-            self.masque_mot()
-        except ValueError as e:
-            QMessageBox.warning(self, "Erreur", str(e))
-
-    def masque_password(self):
-        if self.visible:
-            self.label_password.setText(self.mot_recent)
-        else:
-            self.label_password.setText("*" * len(self.mot_recent))
-
-    def masque_visibilite(self):
-        self.visible = not self.visible
-        self.masque_mot()
-
-    def copie_mot(self):
-        if self.mot_recent:
-            clipboard = QApplication.clipboard()
-            clipboard.setText(self.mot_recent)
-            QMessageBox.information(self, "Copié", "Mot de passe copié dans le presse-papiers !")
+        self.buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        self.buttons.button(QDialogButtonBox.StandardButton.Ok).setText("Utiliser")
+        self.buttons.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
+        self.buttons.accepted.connect(self.accept)
+        self.buttons.rejected.connect(self.reject)
+        layout.addWidget(self.buttons)
 
 
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.resize(420, 400)
-    window.show()
-    sys.exit(app.exec())
