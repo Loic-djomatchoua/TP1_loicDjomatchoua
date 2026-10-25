@@ -1,6 +1,12 @@
 # Nom: Loic Geoffrey Djomacthoua
 # Numero d'etudiant: 2392019
 # Github: TP-LoicDjomatchoua
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QApplication, QCheckBox, QDialog, QDialogButtonBox, QHBoxLayout,
+    QLabel, QMessageBox, QPushButton, QSlider, QVBoxLayout,
+)
+from app.core.generator import PasswordGenerator
 
 
 class GeneratorFenetre(QDialog):
@@ -90,4 +96,33 @@ class GeneratorFenetre(QDialog):
         self.buttons.rejected.connect(self.reject)
         layout.addWidget(self.buttons)
 
+    def generer(self):
+        try:
+            lower, upper, digits, symbols = [c.isChecked() for c in self.checks]
+            password = PasswordGenerator(
+                length=self.slider.value(), use_lower=lower, use_upper=upper,
+                use_digits=digits, use_symbols=symbols,
+                validate=self.validation.isChecked()).generate()
+        except ValueError as exc:
+            QMessageBox.warning(self, "Generation impossible", str(exc))
+
+        self.mot_recent = mot_passe
+        self.afficher.setChecked(False)
+        self.masquer_mot()
+        self.copie_button.setEnabled(True)
+        self.copie_button.setText("Copier")
+        self.buttons.button(QDialogButtonBox.StandardButton.Ok).setEnabled(True)
+
+    def masquer_mot(self):
+        visible = self.afficher.isChecked()
+        self.afficher.setText("Masquer" if visible else "Afficher")
+        self.mot_label.setText(
+            (self.mot_recent if visible else "*" * len(self.mot_recent))
+            if self.mot_recent else "Generer un mot de passe"
+        )
+
+    def copie_mot(self):
+        if self.mot_recent:
+            QApplication.clipboard().setText(self.mot_recent)
+            self.copie_button.setText("Copie!")
 
