@@ -46,3 +46,45 @@ class EntryDialog(QDialog):
         return {"email": self.email.text().strip(), "mot_passe":self.mot_passe.text()}
 
 class EntryRow(QFrame):
+    def __init__(self,entre,modifier, supprimer,parent=None):
+        super().__init__(parent)
+        self.entre = entre
+        self.setFrameShape(QFrame.Shape.Style.StyledPanel)
+        layout = QHLayoutBox()
+        email= QLabel(entre["email"])
+        email.setTextFormat(Qt.TextFormat.PlainText)
+        email.setWordWrap(True)
+
+        self.mot_passe = QLabel("******")
+        self.mot_passe.setTextFormat(Qt.TextFormat.PlainText)
+        self.mot_passe.setWordWrap(True)
+        layout.addWidget(email,2)
+        layout.addWidget(self.mot_passe,2)
+        for text, action in (("Reveler", self.reveler), ("Modifier", modifier), ("Supprimer",supprimer)):
+            button = QPushButton(text)
+            button.clicked.connect(action)
+            layout.addWidget(button)
+        self.timer = QTimer()
+        self.timer.setSingleShot(True)
+        self.timer.timeout.connect(lambda:self.mot_passe.setText("*******"))
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.context_menu)
+        self.modifier_action = modifier
+        self.supprimer_action = supprimer
+
+    def reveler(self):
+        self.mot_passe.setText(self.entre["mot_passe"])
+        self.timer.start(5000)
+
+    def mouseDoubleClickEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.reveler()
+        super().mouseDoubleClickEvent(event)
+
+    def context_menu(self, position):
+        menu = QMenu(self)
+        menu.addAction("Reveler pendant 5 secondes", self.reveler)
+        menu.addAction(self.modifier_action)
+        menu.addAction(self.supprimer_action)
+        menu.exec(self.mapToGlobal(position))
+
