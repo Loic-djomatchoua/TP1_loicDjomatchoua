@@ -1,11 +1,14 @@
+
 import secrets
 import string
 
 
 class PasswordGenerator:
+
     def __init__(self, length=16, use_lower=True, use_upper=True,
                  use_digits=True, use_symbols=True, validate=False):
-        self.length =length
+
+        self.length = length
         self.use_lower = use_lower
         self.use_upper = use_upper
         self.use_digits = use_digits
@@ -13,23 +16,62 @@ class PasswordGenerator:
         self.validate = validate
 
     def generer(self):
-        if type (self.length) is not int or self.length < 1:
-            raise ValueError("La longueur doit être un entier strictement positif.")
-        groups = [chars for enabled , chars in(
-        (self.use_lower, string.ascii_lowercase),
-        (self.use_upper, string.ascii_uppercase),
-        (self.use_digits, string.digits),
-        (self.use_symbols, string.punctuation),
-        ) if enabled]
-        if not groups:
-            raise ValueError("Selectionnez au moins un type de caractères.")
-        if self.validate and self.length < len(groups):
-            raise ValueError("Longueur insuffisante pour les types selectionnés.")
-        alphabet = "".join(groups)
 
-        chars = [secrets.choice(group) for group in groups] if self.validate else []
-        chars.extend(secrets.choice(alphabet)
-                     for _ in range(self.length - len(chars)))
-        secrets.SystemRandom().shuffle(chars)
+        if type(self.length) is not int:
+            raise ValueError("La longueur doit être un entier.")
 
-        return "".join(chars)
+        if self.length < 1:
+            raise ValueError("La longueur doit être supérieure à zéro.")
+
+        groups = []
+
+        if self.use_lower:
+            groups.append(string.ascii_lowercase)
+
+        if self.use_upper:
+            groups.append(string.ascii_uppercase)
+
+        if self.use_digits:
+            groups.append(string.digits)
+
+        if self.use_symbols:
+            groups.append(string.punctuation)
+
+        if len(groups) == 0:
+            raise ValueError("Sélectionnez au moins un type de caractères.")
+
+        if self.validate:
+            if self.length < len(groups):
+                raise ValueError(
+                    "La longueur est insuffisante pour les types sélectionnés."
+                )
+
+
+        alphabet = ""
+
+        for group in groups:
+            alphabet += group
+
+
+        caracteres = []
+
+        if self.validate:
+            for group in groups:
+                character = secrets.choice(group)
+                caracteres.append(character)
+
+
+        while len(caracteres) < self.length:
+            character = secrets.choice(alphabet)
+            caracteres.append(character)
+
+        random_generator = secrets.SystemRandom()
+        random_generator.shuffle(caracteres)
+
+
+        mot_passe = ""
+
+        for character in caracteres:
+            mot_passe += character
+
+        return mot_passe

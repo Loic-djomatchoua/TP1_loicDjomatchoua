@@ -6,45 +6,73 @@ import json
 import os
 
 
+class StorageError(Exception):
+ """Erreur liée au chargement ou à la sauvegarde du coffre"""
+
 class VaultStorage:
     """Gestion du fichier JSON du coffre-fort, avec gestion d'erreurs."""
 
     def __init__(self, filepath="vault.json"):
         self.filepath = filepath
 
-    def load(self):
-        if not os.path.exists(self.filepath):
-            return []
+    def valider(self,entrees):
+        if not isinstance(entrees, list):
+            raise StorageError("Le coffre doit contenir une liste.")
+
+        for entre in entrees:
+            if not isinstance(entre, dict):
+                raise StorageError("Une entrée du coffre est invalide")
+
+            if "email" not in entre:
+                raise StorageError("Une entrée ne contient pâs d'e-mail")
+            if "mot_passe" not in entre:
+                raise StorageError("Une entrée ne contient pas de mot de passe")
+
+            if not isinstance(entre["email"],str):
+                raise StorageError("L'e-mail doit être du texte")
+
+            if not isinstance(entre["mot_passe"],str):
+                raise StorageError("Le mot de passe doit être du texte")
+
+            if entre["email"].strip() == "":
+                raise StorageError("L'e-mail ne doit pas être vide")
+
+            if entre["mot_passe"] == "":
+                raise StorageError("Le mot de passe ne doit pas être vide")
+
+    def chargement(self):
+       """Charge les entrées depuis le fichier JSON"""
+
+       try:
+           with open(self.filepath, "r", encoding="utf-8") as file:
+               entrees = json.load(file)
+
+       except FileNotFoundError:
+          return []
+
+       self.valider(entrees)
+       result = []
+
+       for entre in entrees:
+           nouv_entre = {
+               "email": entre["email"],
+               "mot_passe": entre["mot_passe"],
+           }
+           result.append(nouv_entre)
+
+       return result
+
+    def sauvegarder(self, entrees):
+        """Enregistre dans les données dans le coffre"""
+
+        self.valider(entrees)
+
         try:
-            with open(self.filepath, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            if not isinstance(data, list):
-                raise ValueError("Format invalide")
-            return data
-        except (json.JSONDecodeError, ValueError, OSError):
-            # Fichier corrompu : on retourne une liste vide plutôt que de planter
-            return []
+            texte = json.dumps(entrees)
 
-    def save(self, entries):
-        try:
-            with open(self.filepath, "w", encoding="utf-8") as f:
-                json.dump(entries, f, indent=2, ensure_ascii=False)
-        except OSError as e:
-            raise IOError(f"Impossible de sauvegarder : {e}")
+            with open(self.filepath, "w", encoding="utf-8") as file:
+                file.write(texte)
 
-    def add_entry(self, email, password):
-        entries = self.load()
-        entries.append({"email": email, "password": password})
-        self.save(entries)
+        except Exception:
+            raise StorageError("Impossible d'enregistrer le fichier")
 
-    def update_entry(self, index, email, password):
-        entries = self.load()
-        if 0 <= index < len(entries):
-            entries[index] = {"email": email, "password": password}
-            self.save(entries)
-
-    def delete_entry(self, index):
-        entries = self.load()
-        if 0 <= index < len(entries):
-            entries.pop(index)
-            self.save(entries)

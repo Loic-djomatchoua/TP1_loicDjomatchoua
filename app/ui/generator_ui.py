@@ -1,6 +1,7 @@
 # Nom: Loic Geoffrey Djomacthoua
 # Numero d'etudiant: 2392019
 # Github: TP-LoicDjomatchoua
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QDialog, QDialogButtonBox, QHBoxLayout,
@@ -12,11 +13,11 @@ from app.core.generator import PasswordGenerator
 class GeneratorFenetre(QDialog):
     def __init__(self,parent):
         super().__init__(parent)
-        self.setWindowTitle("Genereateur de mot de passe")
+        self.setWindowTitle("Generateur de mot de passe")
         self.resize(600,450)
         self.mot_recent = ""
 
-        layout = QVBoxLayout()
+        layout = QVBoxLayout(self)
         titre = QLabel("Generateur de mots de passe")
         titre.setObjectName("titre")
         titre.setWordWrap(True)
@@ -68,8 +69,6 @@ class GeneratorFenetre(QDialog):
         self.mot_label.setMinimumHeight(56)
         self.mot_label.setWordWrap(True)
         self.mot_label.setTextFormat(Qt.TextFormat.PlainText)
-        self.mot_label.setInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse
-                                           | Qt.TextInteractionFlag.TextSelectableByKeyboard)
         layout.addWidget(self.mot_label)
 
         ligne = QHBoxLayout()
@@ -83,7 +82,7 @@ class GeneratorFenetre(QDialog):
         layout.addLayout(ligne)
 
         generer = QPushButton("Generer un mot de passe")
-        generer.setObjectName("Marron")
+        generer.setAutoDefault(False)
         generer.clicked.connect(self.generer)
         layout.addWidget(generer)
 
@@ -98,28 +97,52 @@ class GeneratorFenetre(QDialog):
 
     def generer(self):
         try:
-            lower, upper, digits, symbols = [c.isChecked() for c in self.checks]
-            password = PasswordGenerator(
-                length=self.slider.value(), use_lower=lower, use_upper=upper,
-                use_digits=digits, use_symbols=symbols,
-                validate=self.validation.isChecked()).generate()
-        except ValueError as exc:
-            QMessageBox.warning(self, "Generation impossible", str(exc))
+            generateur = PasswordGenerator(
+                length=self.slider.value(),
+                use_lower=self.verifies[0].isChecked(),
+                use_upper=self.verifies[1].isChecked(),
+                use_digits=self.verifies[2].isChecked(),
+                use_symbols=self.verifies[3].isChecked(),
+                validate=self.validation.isChecked()
+            )
 
-        self.mot_recent = mot_passe
-        self.afficher.setChecked(False)
-        self.masquer_mot()
-        self.copie_button.setEnabled(True)
-        self.copie_button.setText("Copier")
-        self.buttons.button(QDialogButtonBox.StandardButton.Ok).setEnabled(True)
+            mot_passe = generateur.generer()
 
-    def masquer_mot(self):
-        visible = self.afficher.isChecked()
-        self.afficher.setText("Masquer" if visible else "Afficher")
-        self.mot_label.setText(
-            (self.mot_recent if visible else "*" * len(self.mot_recent))
-            if self.mot_recent else "Generer un mot de passe"
-        )
+
+        except ValueError as erreur:
+
+            self.erreur_label.setText(f"Erreur : {erreur}")
+
+            self.erreur_label.show()
+
+        else:
+            self.mot_recent = mot_passe
+
+            self.afficher.setChecked(False)
+            self.masquer_mot_passe(False)
+
+            self.copie_button.setEnabled(True)
+            self.copie_button.setText("Copier")
+
+            bouton_utiliser = self.buttons.button(
+                QDialogButtonBox.StandardButton.Ok
+            )
+            bouton_utiliser.setEnabled(True)
+
+    def masquer_mot_passe(self, checked):
+        if self.mot_recent == "":
+            self.mot_label.setText("Générez un mot de passe")
+
+        elif checked:
+            self.mot_label.setText(self.mot_recent)
+
+        else:
+            self.mot_label.setText("*" * len(self.mot_recent))
+
+        if checked:
+            self.afficher.setText("Masquer")
+        else:
+            self.afficher.setText("Afficher")
 
     def copie_mot(self):
         if self.mot_recent:
