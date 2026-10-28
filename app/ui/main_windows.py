@@ -1,3 +1,7 @@
+# Nom: Loic Geoffrey Djomacthoua
+#Numero etudiant: 2392019
+# GitHub: Loic-djomatchoua
+
 import sys
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import (

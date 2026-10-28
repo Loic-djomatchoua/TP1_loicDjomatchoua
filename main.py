@@ -1,6 +1,6 @@
-# Nom : [A REMPLACER]
-# Numero etudiant : [A REMPLACER]
-# GitHub : [A REMPLACER]
+# Nom: Loic Geoffrey Djomacthoua
+#Numero etudiant: 2392019
+# GitHub: Loic-djomatchoua
 
 import argparse
 import sys

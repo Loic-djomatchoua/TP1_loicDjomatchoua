@@ -1,6 +1,6 @@
-# Nom :Loic Djomacthoua
-# Numéro d'étudiant : 2392019
-# GitHub : TP-LoicDjomacthoua
+# Nom: Loic Geoffrey Djomacthoua
+#Numero etudiant: 2392019
+# GitHub: Loic-djomatchoua
 
 import json
 import os

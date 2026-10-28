@@ -1,6 +1,6 @@
 # Nom: Loic Geoffrey Djomacthoua
-# Numero d'etudiant: 2392019
-# Github: TP-LoicDjomatchoua
+#Numero etudiant: 2392019
+# GitHub: Loic-djomatchoua
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (

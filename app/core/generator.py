@@ -1,3 +1,6 @@
+# Nom: Loic Geoffrey Djomacthoua
+#Numero etudiant: 2392019
+# GitHub: Loic-djomatchoua
 
 import secrets
 import string
