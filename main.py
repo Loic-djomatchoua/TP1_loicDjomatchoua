@@ -1,63 +1,95 @@
-# Noms: Loic Geoffrey Djomatchoua
-# Numéro d'éudiant: 2392019
-#Github: Loic-Djomatchoua
+# Nom: Loic Geoffrey Djomacthoua
+#Numero etudiant: 2392019
+# GitHub: Loic-djomatchoua
 
 import argparse
+import sys
+
+from PySide6.QtWidgets import QApplication
 
 from app.core.generator import PasswordGenerator
+from app.ui.main_windows import MainWindow
 
-def parse_arguments():
+
+def main():
+    """Point d'entrée du programme : lance le mode console ou l'interface graphique."""
 
     parser = argparse.ArgumentParser(
-    description = "Générateur de mot de passe.")
+        description="Générateur et coffre-fort"
+    )
+
+    parser.add_argument(
+        "--no-gui",
+        action="store_true",
+        help="Mode ligne de commande"
+    )
+
+    parser.add_argument(
+        "--vault_file",
+        default="vault.json",
+        help="Fichier JSON du coffre"
+    )
 
     parser.add_argument(
         "--length",
-        type = int,
-        default= 16,
-        help = "Longueur du mot de passe. Valeur par défaut: 16.",
+        type=int,
+        default=16,
+        help="Longueur du mot de passe"
     )
-    parser.add_argument(
-        "--no-lower",
-        action = "store_true",
-        help= "Exclut les lettres minuscules.",
-    )
-    parser.add_argument(
-        "--no-upper",
-        action = "store_true",
-        help = "Exclut les lettres majuscules.",
-    )
-    parser.add_argument(
-        "--no-digits",
-        action = "store_true",
-        help = "Exclut les chiffres",
-    )
-    parser.add_argument(
-        "--no-symbols",
-        action = "store_true",
-        help = "Exclut les symboles",
-    )
+
+    for option in ("lower", "upper", "digits", "symbols"):
+        parser.add_argument(
+            f"--no-{option}",
+            action="store_true"
+        )
+
     parser.add_argument(
         "--validate",
-        action = "store_true",
-        help ="Force au moins un caractère de chaque type selectionné",
+        action="store_true",
+        help="Exiger chaque type de caractères sélectionné"
     )
-    return parser.parse_args()
 
-def main():
+    args = parser.parse_args()
 
-    arguments = parse_arguments()
+    if args.no_gui:
+        return generer_en_console(args)
 
-    generator = PasswordGenerator(length=arguments.length, minuscules=not arguments.no_lower,
-                                  majuscules=not arguments.no_upper, chiffres=not arguments.no_digits,
-                                  symboles=not arguments.no_symbols, validate=arguments.validate)
+    return lancer_interface_graphique(args)
+
+
+def generer_en_console(args):
+    """Génère un mot de passe directement dans le terminal."""
 
     try:
+        generator = PasswordGenerator(
+            length=args.length,
+            use_lower=not args.no_lower,
+            use_upper=not args.no_upper,
+            use_digits=not args.no_digits,
+            use_symbols=not args.no_symbols,
+            validate=args.validate
+        )
+
         password = generator.generer()
-        print(f"Mot de passe généré: {password}")
+        print(password)
+
     except ValueError as error:
-        print(f"Erreur: {error}")
+        parser = argparse.ArgumentParser()
+        parser.error(str(error))
+
+    return 0
+
+
+def lancer_interface_graphique(args):
+    """Lance l'interface graphique du coffre-fort."""
+
+    app = QApplication([sys.argv[0]])
+    app.setStyle("Fusion")
+    window = MainWindow(args.vault_file)
+    window.show()
+
+    return app.exec()
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
